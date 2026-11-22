@@ -40,10 +40,16 @@
     <span class="loader-dots" aria-hidden="true"><i></i><i></i><i></i></span>
   </div>
 
-  <button class="music-toggle" id="music-toggle" type="button" aria-label="Play music" aria-pressed="false" title="Play music" hidden>
-    <span class="music-note" aria-hidden="true">♪</span>
-    <span class="music-bars" aria-hidden="true"><i></i><i></i><i></i></span>
-  </button>
+  <div class="music-controls" id="music-controls" hidden>
+    <button class="music-toggle" id="music-toggle" type="button" aria-label="Play music" aria-pressed="false" title="Play music">
+      <span class="music-note" aria-hidden="true">♪</span>
+      <span class="music-bars" aria-hidden="true"><i></i><i></i><i></i></span>
+    </button>
+    <label class="music-volume">
+      <span class="sr-only">Music volume</span>
+      <input id="music-volume" type="range" min="0" max="100" value="55" aria-label="Music volume" title="Music volume">
+    </label>
+  </div>
   <audio id="bg-music" loop preload="auto"></audio>
   <span class="sr-only" id="music-status" aria-live="polite"></span>
 

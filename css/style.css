@@ -2392,11 +2392,21 @@ main {
 
 /* ---------- music ---------- */
 
-.music-toggle {
+.music-controls {
   position: fixed;
   right: clamp(1rem, 3vw, 2rem);
   bottom: clamp(1rem, 3vw, 2rem);
   z-index: 900;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.music-controls[hidden] {
+  display: none;
+}
+
+.music-toggle {
   display: grid;
   place-items: center;
   width: 3.1rem;
@@ -2415,8 +2425,48 @@ main {
   transition: border-color 0.4s, background 0.4s, transform 0.4s var(--ease);
 }
 
-.music-toggle[hidden] {
-  display: none;
+.music-volume {
+  display: flex;
+  align-items: center;
+  padding: 0 0.65rem;
+  height: 2.4rem;
+  border: 1px solid rgba(246, 223, 160, 0.26);
+  border-radius: 999px;
+  background: rgba(16, 21, 43, 0.62);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.35);
+}
+
+.music-volume input {
+  width: 5.5rem;
+  height: 3px;
+  margin: 0;
+  border-radius: 999px;
+  appearance: none;
+  -webkit-appearance: none;
+  background: linear-gradient(to right, var(--gold) var(--volume, 55%), rgba(246, 223, 160, 0.25) var(--volume, 55%));
+  cursor: pointer;
+}
+
+.music-volume input::-webkit-slider-thumb {
+  width: 11px;
+  height: 11px;
+  border: none;
+  border-radius: 50%;
+  background: var(--gold);
+  appearance: none;
+  -webkit-appearance: none;
+  box-shadow: 0 0 8px rgba(246, 223, 160, 0.6);
+}
+
+.music-volume input::-moz-range-thumb {
+  width: 11px;
+  height: 11px;
+  border: none;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 8px rgba(246, 223, 160, 0.6);
 }
 
 .music-toggle:hover {
@@ -2549,6 +2599,10 @@ main {
   .music-toggle {
     width: 2.8rem;
     height: 2.8rem;
+  }
+
+  .music-volume input {
+    width: 4rem;
   }
 
   .letter-paper {

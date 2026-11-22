@@ -14,7 +14,7 @@ const PERSONAL = {
   // Off by default. Visitors can turn it on with the music button.
   // Set autoplay to true to start automatically on the first interaction.
   music: {
-    src: "ref/music/HAPPY%20BIRTHDAY%20TO%20YOU%20PIANO%20INSTRUMENTAL%20BEST%20HAPPY%20BITHDAY%20MUSIC%202021.mp3",
+    src: "ref/music/own%20voice%20birthday%20song.mpeg",
     volume: 0.55,
     autoplay: false
   },
@@ -1211,17 +1211,33 @@ function initGif() {
 
 function initMusic() {
   const audio = $("#bg-music");
+  const controls = $("#music-controls");
   const button = $("#music-toggle");
+  const volumeSlider = $("#music-volume");
   const status = $("#music-status");
 
-  if (!audio || !button || !PERSONAL.music || !PERSONAL.music.src) return;
+  if (!audio || !controls || !button || !volumeSlider || !PERSONAL.music || !PERSONAL.music.src) return;
 
   const shouldAutoplay = PERSONAL.music.autoplay !== false;
-  let available = false;
   let unlockArmed = false;
 
   audio.volume = PERSONAL.music.volume ?? 0.55;
   audio.src = PERSONAL.music.src;
+
+  const setVolume = (value) => {
+    const level = Math.max(0, Math.min(1, value));
+    audio.volume = level;
+    volumeSlider.value = String(Math.round(level * 100));
+    volumeSlider.style.setProperty("--volume", `${Math.round(level * 100)}%`);
+  };
+
+  setVolume(audio.volume);
+
+  controls.hidden = false;
+
+  volumeSlider.addEventListener("input", () => {
+    setVolume(Number(volumeSlider.value) / 100);
+  });
 
   const updateUI = (playing) => {
     button.classList.toggle("is-playing", playing);
@@ -1272,23 +1288,13 @@ function initMusic() {
     if (!(await play())) armUnlock();
   };
 
-  const showButton = () => {
-    if (available) return;
-    available = true;
-    button.hidden = false;
-    updateUI(!audio.paused);
-    startAutomatically();
-  };
+  audio.addEventListener("loadedmetadata", () => {
+    if (shouldAutoplay) startAutomatically();
+  }, { once: true });
 
-  audio.addEventListener("loadedmetadata", showButton, { once: true });
-  audio.addEventListener("canplay", showButton, { once: true });
   audio.addEventListener("error", () => {
-    button.hidden = true;
+    controls.hidden = true;
   });
-
-  if (audio.readyState >= 1) {
-    showButton();
-  }
 
   armUnlock();
 
