@@ -14,7 +14,7 @@ const PERSONAL = {
   // Off by default. Visitors can turn it on with the music button.
   // Set autoplay to true to start automatically on the first interaction.
   music: {
-    src: "ref/music/own%20voice%20birthday%20song.mpeg",
+    src: "ref/music/own%20voice%20birthday%20song.mp3",
     volume: 0.55,
     autoplay: false
   },
@@ -27,6 +27,7 @@ const PERSONAL = {
   },
 
   hero: {
+    giftLine: "a little gift for my love ..",
     line1: "Somewhere under this same sky...",
     line2: "my favourite person was born.",
     greeting: "Happy Birthday,",
@@ -105,6 +106,29 @@ const PERSONAL = {
       first: "Why did you press it?! 😭",
       second: "Fine.",
       final: "Because I have one last thing to tell you..."
+    },
+    heart: {
+      hits: 5,
+      quips: [
+        "Direct hit. Right where you always land. ❤️",
+        "Careful, birthday boy. 😌",
+        "My heart's a little loud today.",
+        "You're showing off now.",
+        "Okay, you've officially got me."
+      ],
+      title: "You hit my heart every time. 💘",
+      body: "Good thing it was already yours."
+    },
+    hug: {
+      knocks: 3,
+      quips: [
+        "Hmm... someone's there. 🫶",
+        "Knock again, I think they're shy.",
+        "They're coming in..."
+      ],
+      arrived: "A very small, very fluffy someone is here for you. 🧸",
+      title: "Big fluffy hug, delivered. 🤗",
+      body: "Pretend it's from me — I'd be hugging you right now if I could."
     }
   },
 
@@ -264,6 +288,7 @@ function renderContent() {
   document.title = `For my ${PERSONAL.nickname}`;
 
   setText("[data-nickname]", PERSONAL.nickname);
+  setText("[data-hero-gift]", PERSONAL.hero.giftLine);
   setText("[data-hero-line1]", PERSONAL.hero.line1);
   setText("[data-hero-line2]", PERSONAL.hero.line2);
   setText("[data-hero-greeting]", PERSONAL.hero.greeting);
@@ -393,6 +418,16 @@ function renderGameCopy() {
   const findBody = $("[data-find-body]");
   if (findTitle) findTitle.textContent = PERSONAL.games.find.title;
   if (findBody) findBody.textContent = PERSONAL.games.find.body;
+
+  const heartTitle = $("[data-heart-title]");
+  const heartBody = $("[data-heart-body]");
+  if (heartTitle) heartTitle.textContent = PERSONAL.games.heart.title;
+  if (heartBody) heartBody.textContent = PERSONAL.games.heart.body;
+
+  const hugTitle = $("[data-hug-title]");
+  const hugBody = $("[data-hug-body]");
+  if (hugTitle) hugTitle.textContent = PERSONAL.games.hug.title;
+  if (hugBody) hugBody.textContent = PERSONAL.games.hug.body;
 }
 
 // ---------- loader ----------
@@ -1055,6 +1090,192 @@ function initFindGame() {
   }
 }
 
+// ---------- game 5: arrow to my heart ----------
+
+function initHeartGame() {
+  const field = $("[data-heart-field]");
+  const heart = $("[data-heart-target]");
+  if (!field || !heart) return;
+
+  const progress = $("#heart-count");
+  const quip = $("#heart-quip");
+  const status = $("#heart-status");
+  const result = $("[data-heart-result]");
+  const config = PERSONAL.games.heart;
+  const total = Math.max(1, config.hits);
+  let hits = 0;
+  let finished = false;
+
+  const updateProgress = () => {
+    if (progress) progress.textContent = `${hits} / ${total} hits`;
+  };
+
+  const showQuip = (line) => {
+    if (!quip || !line) return;
+    quip.textContent = line;
+    quip.classList.remove("is-visible");
+    void quip.offsetWidth;
+    quip.classList.add("is-visible");
+  };
+
+  const moveHeart = () => {
+    field.style.setProperty("--x", `${randomBetween(22, 78).toFixed(2)}%`);
+    field.style.setProperty("--y", `${randomBetween(20, 70).toFixed(2)}%`);
+  };
+
+  const finishGame = () => {
+    if (finished) return;
+    finished = true;
+    heart.disabled = true;
+    field.style.cursor = "default";
+    if (status) status.textContent = `${config.title} ${config.body}`;
+    setGameResult(result, true);
+  };
+
+  const shootArrow = (clickX, clickY) => {
+    const rect = field.getBoundingClientRect();
+    const startX = rect.width / 2;
+    const startY = rect.height - 28;
+    const dx = clickX - startX;
+    const dy = clickY - startY;
+    const angle = (Math.atan2(dy, dx) * 180) / Math.PI + 90;
+
+    const arrow = document.createElement("span");
+    arrow.className = "love-arrow";
+    arrow.setAttribute("aria-hidden", "true");
+    arrow.style.setProperty("--from-x", `${startX}px`);
+    arrow.style.setProperty("--tx", `${dx}px`);
+    arrow.style.setProperty("--ty", `${dy}px`);
+    arrow.style.setProperty("--angle", `${angle}deg`);
+    field.append(arrow);
+    window.setTimeout(() => arrow.remove(), 560);
+  };
+
+  field.addEventListener("click", (event) => {
+    if (finished) return;
+
+    const rect = field.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const clickY = event.clientY - rect.top;
+    shootArrow(clickX, clickY);
+
+    const heartX = heart.offsetLeft + heart.offsetWidth / 2;
+    const heartY = heart.offsetTop + heart.offsetHeight / 2;
+    const distance = Math.hypot(clickX - heartX, clickY - heartY);
+
+    if (distance > Math.max(62, heart.offsetWidth * 0.46)) {
+      showQuip("So close. Aim at my heart. 😌");
+      if (status) status.textContent = "The arrow missed. Try again.";
+      return;
+    }
+
+    hits += 1;
+    updateProgress();
+    burstFrom(field, heartX, heartY, { count: 16, spread: 92 });
+    playCatchSound();
+
+    heart.classList.remove("is-hit");
+    void heart.offsetWidth;
+    heart.classList.add("is-hit");
+    window.setTimeout(() => heart.classList.remove("is-hit"), 480);
+
+    const line = config.quips[(hits - 1) % config.quips.length];
+    showQuip(line);
+    if (status) status.textContent = `${hits} of ${total} hits. ${line}`;
+
+    if (hits >= total) {
+      window.setTimeout(finishGame, reduceMotion.matches ? 80 : 560);
+    } else {
+      window.setTimeout(moveHeart, reduceMotion.matches ? 60 : 520);
+    }
+  });
+
+  moveHeart();
+  updateProgress();
+}
+
+// ---------- game 6: knock for a hug ----------
+
+function initDoorGame() {
+  const field = $("[data-door-field]");
+  const door = $("[data-door]");
+  const hugButton = $("[data-hug-button]");
+  if (!field || !door) return;
+
+  const progress = $("#door-count");
+  const quip = $("#door-quip");
+  const status = $("#door-status");
+  const result = $("[data-hug-result]");
+  const config = PERSONAL.games.hug;
+  const total = Math.max(1, config.knocks);
+  let knocks = 0;
+  let opened = false;
+  let hugged = false;
+
+  const updateProgress = () => {
+    if (progress) progress.textContent = `${knocks} / ${total} knocks`;
+  };
+
+  const showQuip = (line) => {
+    if (!quip || !line) return;
+    quip.textContent = line;
+    quip.classList.remove("is-visible");
+    void quip.offsetWidth;
+    quip.classList.add("is-visible");
+  };
+
+  door.addEventListener("click", () => {
+    if (opened) return;
+
+    knocks += 1;
+    updateProgress();
+
+    field.classList.remove("is-knocking");
+    void field.offsetWidth;
+    field.classList.add("is-knocking");
+    window.setTimeout(() => field.classList.remove("is-knocking"), 360);
+    playTone(190, 90, 0.14, "triangle", 0.03);
+
+    showQuip(config.quips[(knocks - 1) % config.quips.length]);
+    if (status) status.textContent = `Knock ${knocks} of ${total}.`;
+
+    if (knocks >= total) {
+      opened = true;
+      door.disabled = true;
+      door.setAttribute("aria-label", "The door is open");
+      window.setTimeout(() => {
+        field.classList.add("is-open");
+        showQuip(config.arrived);
+        if (status) status.textContent = config.arrived;
+        if (hugButton) hugButton.hidden = false;
+      }, reduceMotion.matches ? 60 : 420);
+    }
+  });
+
+  if (hugButton) {
+    hugButton.addEventListener("click", () => {
+      if (hugged || !opened) return;
+      hugged = true;
+      hugButton.hidden = true;
+      field.classList.add("is-hugging");
+
+      const fieldRect = field.getBoundingClientRect();
+      burstFrom(field, fieldRect.width / 2, fieldRect.height * 0.5, {
+        count: 40,
+        spread: 180,
+        colors: ["#f5c7d8", "#f6dfa0", "#b9a7e0", "#fff8ea"],
+        symbols: ["❤", "✦", "✧", "♥"]
+      });
+      playFindSound();
+      showQuip(config.title);
+      if (status) status.textContent = `${config.title} ${config.body}`;
+      window.setTimeout(() => setGameResult(result, true), reduceMotion.matches ? 80 : 900);
+    });
+  }
+
+  updateProgress();
+}
+
 // ---------- final silly button ----------
 
 function initSurprise() {
@@ -1211,12 +1432,12 @@ function initGif() {
 
 function initMusic() {
   const audio = $("#bg-music");
-  const controls = $("#music-controls");
+  const controls = $("#music-volume-control");
   const button = $("#music-toggle");
   const volumeSlider = $("#music-volume");
   const status = $("#music-status");
 
-  if (!audio || !controls || !button || !volumeSlider || !PERSONAL.music || !PERSONAL.music.src) return;
+  if (!audio || !button || !volumeSlider || !PERSONAL.music || !PERSONAL.music.src) return;
 
   const shouldAutoplay = PERSONAL.music.autoplay !== false;
   let unlockArmed = false;
@@ -1293,7 +1514,7 @@ function initMusic() {
   }, { once: true });
 
   audio.addEventListener("error", () => {
-    controls.hidden = true;
+    if (status) status.textContent = "Music could not be loaded.";
   });
 
   armUnlock();
@@ -1329,6 +1550,8 @@ initCakeGame();
 initCatchGame();
 initFindGame();
 initSurprise();
+initHeartGame();
+initDoorGame();
 initReveal();
 initParallax();
 initCursorGlow();
